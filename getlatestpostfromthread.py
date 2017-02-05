@@ -38,7 +38,7 @@ def get_content(url):
         return "timeout"
 
 
-def get_newest_in_thread(thread, num_of_pages):
+def get_all_posts_from_thread(thread, num_of_pages):
     i = 1
     allPosts = []
     while i <= num_of_pages:
@@ -53,16 +53,17 @@ def get_newest_in_thread(thread, num_of_pages):
             soup_data = BeautifulSoup(str(inf), 'html.parser')
             # print(soup_data)
             timestamp = soup_data.find('span', {"class": "dateTime"})['data-utc']
-            image = soup_data.find('a', {"class": "fileThumb"}).find('img')['src']
+            thumbnail = soup_data.find('a', {"class": "fileThumb"}).find('img')['src']
+            image = soup_data.find('a', {"class": "fileThumb"})['href']
             link = soup_data.find('a', {"class": "replylink"})['href']
             quote = soup_data.find('blockquote', {"class": "postMessage"}).getText()
             allPosts.append({
                 "timestamp": timestamp,
-                "thumbnail": 'http:' + image,
+                "thumbnail": 'http:' + thumbnail,
+                "image": 'http:' + image,
                 "link": root_url + '/' + link,
                 "description": quote
              })
         i += 1
     sorted_posts = sorted(allPosts, key=lambda k: k['timestamp'], reverse=True)
-    newest_post = sorted_posts[0]
-    return newest_post
+    return sorted_posts
