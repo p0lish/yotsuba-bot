@@ -26,42 +26,48 @@ def help(bot, update):
     update.message.reply_text(help_content)
 
 
+def get_photo_results(post):
+    return InlineQueryResultPhoto(
+        id=uuid4(),
+        thumb_url=post["thumbnail"],
+        photo_url=post["image"],
+        caption=post["link"]
+    )
+
+
+def get_gif_results(post):
+    return InlineQueryResultGif(
+        id=uuid4(),
+        thumb_url=post["thumbnail"],
+        gif_url=post["image"],
+        caption=post["link"]
+    )
+
+
+def get_webm_results(post):
+    return InlineQueryResultVideo(
+        id=uuid4(),
+        thumb_url=post["thumbnail"],
+        video_url=post["image"],
+        caption=post["link"],
+        title=post["description"],
+        mime_type="video/mp4"
+    )
+
+
+
 def inline_query(bot, update):
     query = update.inline_query.query
     results = list()
     if query in enabled_threads:
         posts = get_all_posts_from_thread(query, 1)
-        print(posts)
         for post in posts:
             if post["image"].endswith('.jpg'):
-                results.append(
-                    InlineQueryResultPhoto(
-                        id=uuid4(),
-                        thumb_url=post["thumbnail"],
-                        photo_url=post["image"],
-                        caption=post["link"]
-                    )
-                )
+                results.append(get_photo_results(post))
             if post["image"].endswith('.gif'):
-                results.append(
-                    InlineQueryResultGif(
-                        id=uuid4(),
-                        thumb_url=post["thumbnail"],
-                        gif_url=post["image"],
-                        caption=post["link"]
-                    )
-                )
+                results.append(get_gif_results(post))
             if post["image"].endswith('.webm'):
-                results.append(
-                    InlineQueryResultVideo(
-                        id=uuid4(),
-                        thumb_url=post["thumbnail"],
-                        video_url=post["image"],
-                        caption=post["link"],
-                        title=post["description"],
-                        mime_type="video/mp4"
-                    )
-                )
+                results.append(get_webm_results(post))
     update.inline_query.answer(results)
 
 
