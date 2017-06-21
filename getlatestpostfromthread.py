@@ -1,4 +1,5 @@
 #!/usr/bin/python
+import json
 import random
 import socket
 
@@ -12,6 +13,8 @@ POSSIBLE_ERRORS = (HTTPError,
                    requests.exceptions.ConnectionError)
 
 ROOT_URL = "http://boards.4chan.org"
+API_URL = "http://api.4chan.org"
+IMAGES_URL = "http://i.4cdn.org"
 
 USERAGENTS = [
     "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36",
@@ -38,32 +41,38 @@ def get_content(url):
         return "timeout"
 
 
-def get_all_posts_from_thread(thread, num_of_pages):
-    i = 1
+def get_image_url(thread, filename, extension):
+    return IMAGES_URL + "/" + thread + "/" + filename  + extension
+
+
+def get_image_thumbnail(thread, filename, extension):
+    return IMAGES_URL + "/" + thread + "/" + filename + 's' + extension
+
+
+def get_thread_url(thread, thread_no):
+    return "/".join((ROOT_URL, thread, "thread",  str(thread_no)))
+
+
+def get_all_posts_from_thread(thread):
     allPosts = []
-    while i <= num_of_pages:
-        str_i = str(i) if i > 1 else ""
-        current_url = "/".join((ROOT_URL, thread, str_i))
-        root_url = "/".join((ROOT_URL, thread, ""))
-        content = get_content(current_url)
-        soup_content = BeautifulSoup(content, 'html.parser')
-        info = soup_content.findAll('div', {"class": "thread"})
-        info = list(set(info))
-        for inf in info:
-            soup_data = BeautifulSoup(str(inf), 'html.parser')
-            # print(soup_data)
-            timestamp = soup_data.find('span', {"class": "dateTime"})['data-utc']
-            thumbnail = soup_data.find('a', {"class": "fileThumb"}).find('img')['src']
-            image = soup_data.find('a', {"class": "fileThumb"})['href']
-            link = soup_data.find('a', {"class": "replylink"})['href']
-            quote = soup_data.find('blockquote', {"class": "postMessage"}).getText()
-            allPosts.append({
-                "timestamp": timestamp,
-                "thumbnail": 'http:' + thumbnail,
-                "image": 'http:' + image,
-                "link": root_url + '/' + link,
-                "description": quote
-             })
-        i += 1
+
+    current_url = "/".join((API_URL, thread, "catalog.json"))
+    content = json.loads(get_content(current_url))
+    for pages in content:
+        for threads in pages['threads']:
+            if "tim" in threads:
+                image_url = get_image_url(thread, str(threads["tim"]), threads["ext"])
+                timestamp = threads['time']
+                thumbnail = get_image_thumbnail(thread, str(threads["tim"]), threads["ext"])
+                link = get_thread_url(thread, threads['no'])
+                quote = threads.get('com', '')
+                allPosts.append({
+                    "timestamp": timestamp,
+                    "thumbnail": thumbnail,
+                    "image": image_url,
+                    "link": link,
+                    "description": quote
+                })
+
     sorted_posts = sorted(allPosts, key=lambda k: k['timestamp'], reverse=True)
-    return sorted_posts
+    return sorted_posts[:20]
