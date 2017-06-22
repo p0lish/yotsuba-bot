@@ -11,7 +11,7 @@ def hello():
     return str(res)
 
 def main():
-    app.run(port=os.environ['PORT', 8080])
+    app.run(port=os.environ.get('PORT', 8080))
 
 
 if __name__ == '__main__':
