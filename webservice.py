@@ -1,4 +1,4 @@
-import sys
+import os
 from flask import Flask
 import random
 
@@ -11,7 +11,7 @@ def hello():
     return str(res)
 
 def main():
-    app.run(port=sys.argv[1])
+    app.run(port=os.environ['PORT', 8080])
 
 
 if __name__ == '__main__':
