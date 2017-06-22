@@ -1,1 +1,2 @@
-web: python app.py
+web: python webservice.py
+worker: python yotsuba_bot.py
